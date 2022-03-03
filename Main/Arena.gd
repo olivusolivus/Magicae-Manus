@@ -61,7 +61,7 @@ onready var EnemyDeckSlots = [
 var state = TALKING
 var turns: int = 0
 
-var shake_x = -128
+var shake_x = -576
 
 var enemy_selected_card = null
 
@@ -72,10 +72,11 @@ func _ready():
 	$BattleMusic.stream = Global.battle_music_stream
 	$BattleMusic.play()
 	
-	$UISpace/BackGround/GreenMaskTween.interpolate_property($UISpace/BackGround/GreenMask, "rect_position", Vector2(-64, 0), Vector2(-64, -128), 10, Tween.TRANS_QUART, Tween.EASE_IN_OUT)
+	$UISpace/BackGround/GreenMaskTween.interpolate_property($UISpace/BackGround/GreenMask, "rect_position", Vector2(-64, 0), Vector2(-64, -128), 40, Tween.TRANS_QUART, Tween.EASE_IN_OUT)
 	$UISpace/BackGround/GreenMaskTween.start()
 	
-	$Dialogue.audio.stream = load("res://SFX/LionVoice.mp3")
+	$Dialogue.audioSFX = load("res://SFX/LionVoice.mp3")
+	$Dialogue.dialog = DialogSource.test
 	
 	draw_card("player", true)
 	draw_card("enemy", true)
@@ -117,6 +118,8 @@ func set_enemy_selected_card(strat: String = "first-to-last"):
 		else:
 			draw_card("enemy", false)
 			set_enemy_selected_card("first-to-last")
+	elif strat == "attacker":
+		pass
 
 func get_open_slot(deck, return_type):
 	#checks for open slots in the appropriate deck
@@ -215,6 +218,12 @@ func play_card(who, card):
 				$Damaged.play(0.06)
 				$Loose.play()
 				player_health.value += -3
+			elif enemy_recently_played_card.effect.begins_with("~"):
+				screen_shake.start()
+				$Damaged.play(0.06)
+				$Loose.play()
+				player_health.value -= 1
+				enemy_health.value -= 1
 		
 		for i in range(len(PlayerDeckSlots)):
 			if PlayerDeckSlots[i] == card:
@@ -273,6 +282,12 @@ func play_card(who, card):
 				$Damaged.play(0.06)
 				$Loose.play()
 				enemy_health.value += -3
+			elif enemy_recently_played_card.effect.begins_with("~"):
+				screen_shake.start()
+				$Damaged.play(0.06)
+				$Loose.play()
+				player_health.value -= 1
+				enemy_health.value -= 1
 		
 		for i in range(len(EnemyDeckSlots)):
 			if EnemyDeckSlots[i] == card:
@@ -407,9 +422,11 @@ func end_game(winner: String):
 		winner_prompt.get_child(0).text = "draw"
 	
 	yield(get_tree().create_timer(5), "timeout")
-	$UISpace/FadeTween.interpolate_property($UISpace/Fade, "color", Color("#00000000"), Color("#000000"), 3.5, Tween.TRANS_QUART, Tween.EASE_OUT)
+	$UISpace/FadeTween.interpolate_property($CanvasLayer/Fade, "color", Color("#00000000"), Color("#000000"), 3.5, Tween.TRANS_QUART, Tween.EASE_OUT)
 	$UISpace/FadeTween.start()
-	
+	yield(get_tree().create_timer(3.6), "timeout")
+# warning-ignore:return_value_discarded
+	get_tree().change_scene(Global.battle_scene_to_change_to)
 
 func instance_node(node: PackedScene, location: Vector2, parent: Node):
 	#basic instancing of a packed scene function
@@ -433,11 +450,11 @@ func _on_CardPlayArea_input_event(_viewport, event, _shape_idx):
 
 
 func _on_GreenMaskTween_tween_all_completed():
-	if shake_x == -128:
-		$UISpace/BackGround/GreenMaskTween.interpolate_property($UISpace/BackGround/GreenMask, "rect_position", $UISpace/BackGround/GreenMask.rect_position, Vector2(0, $UISpace/BackGround/GreenMask.rect_position.y), 10, Tween.TRANS_QUART, Tween.EASE_IN_OUT)
+	if shake_x == -576:
+		$UISpace/BackGround/GreenMaskTween.interpolate_property($UISpace/BackGround/GreenMask, "rect_position", $UISpace/BackGround/GreenMask.rect_position, Vector2(0, $UISpace/BackGround/GreenMask.rect_position.y), 40, Tween.TRANS_QUART, Tween.EASE_IN_OUT)
 		$UISpace/BackGround/GreenMaskTween.start()
 		shake_x = 0
 	elif shake_x == 0:
-		$UISpace/BackGround/GreenMaskTween.interpolate_property($UISpace/BackGround/GreenMask, "rect_position", $UISpace/BackGround/GreenMask.rect_position, Vector2(-128, $UISpace/BackGround/GreenMask.rect_position.y), 10, Tween.TRANS_QUART, Tween.EASE_IN_OUT)
+		$UISpace/BackGround/GreenMaskTween.interpolate_property($UISpace/BackGround/GreenMask, "rect_position", $UISpace/BackGround/GreenMask.rect_position, Vector2(-576, $UISpace/BackGround/GreenMask.rect_position.y), 40, Tween.TRANS_QUART, Tween.EASE_IN_OUT)
 		$UISpace/BackGround/GreenMaskTween.start()
-		shake_x = -128
+		shake_x = -576
